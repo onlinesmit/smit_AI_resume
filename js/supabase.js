@@ -1,5 +1,5 @@
 /**
- * Supabase Integration Service for ResumeCraft
+ * Supabase Integration Service for Smit_AI_resume_builder
  */
 
 class SupabaseService {

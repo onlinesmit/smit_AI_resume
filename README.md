@@ -1,4 +1,4 @@
-# ResumeCraft — Professional Resume Builder Web App
+# Smit_AI_resume_builder
 
 A modern, responsive, zero-dependency web application for building, customizing, and downloading professional resumes in PDF format.
 

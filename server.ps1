@@ -17,7 +17,7 @@ try {
     $listener.Start()
 }
 
-Write-Host "Resume Builder local server running at $prefix"
+Write-Host "Smit_AI_resume_builder local server running at $prefix"
 
 $mimeMap = @{
     ".html" = "text/html; charset=utf-8"
