@@ -1,0 +1,124 @@
+/* ==========================================================================
+   PRINT STYLESHEET (High-Quality Vector PDF Printing)
+   ========================================================================== */
+
+@page {
+  size: A4 portrait;
+  margin: 8mm 10mm;
+}
+
+@media print {
+  /* Hide all UI elements, navigation, editor panels, buttons, and tools */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+    display: block !important;
+    font-size: 10pt;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-header,
+  .template-bar,
+  .mobile-tabs,
+  .panel-editor,
+  .preview-toolbar,
+  .app-modal-overlay,
+  .app-toast,
+  .zoom-controls {
+    display: none !important;
+  }
+
+  .app-workspace {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .panel-preview {
+    display: block !important;
+    background: transparent !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .paper-viewport {
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  #resume-preview-container {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  .resume-sheet {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    border: none !important;
+    page-break-after: avoid;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Specific template print adjustments */
+  .template-plain {
+    padding: 0 !important;
+    font-size: 10pt !important;
+  }
+
+  .template-attractive {
+    padding: 0 !important;
+    display: flex !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .attr-sidebar {
+    background-color: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .attr-contact-card,
+  .attr-card-icon,
+  .attr-pill,
+  .attr-tech-badge,
+  .attr-project-link-badge,
+  .attr-item-badge-date,
+  .attr-timeline-dot {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page break rules */
+  .plain-entry,
+  .attr-timeline-item,
+  .attr-project-card,
+  .attr-edu-card,
+  .attr-cert-card,
+  .attr-sidebar-section,
+  .attr-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Links should not show bracketed URLs in print unless desired */
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}

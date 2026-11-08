@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeCraft — Professional Resume Builder</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- App Stylesheets -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/templates.css" />
+  <link rel="stylesheet" href="css/print.css" />
+
+  <!-- html2pdf.js bundle from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Supabase JS Client from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-icon">📄</div>
+      <div>
+        <h1 class="brand-title">ResumeCraft</h1>
+      </div>
+      <span class="brand-badge">Builder</span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Supabase Cloud Connection & Sync Buttons -->
+      <button type="button" id="btn-supabase-modal" class="btn btn-secondary btn-sm" title="Supabase Cloud Sync">
+        <span class="sb-status-dot dot-disconnected" id="sb-status-dot"></span>
+        <span id="sb-btn-text">Supabase Cloud</span>
+      </button>
+      <button type="button" id="btn-save-cloud" class="btn btn-accent btn-sm" title="Save resume to Supabase Cloud" style="display: none;">
+        <span>☁️</span> <span class="btn-text-hide">Save Cloud</span>
+      </button>
+
+      <button type="button" id="btn-load-sample" class="btn btn-secondary btn-sm" title="Fill form with sample professional data">
+        <span>⚡</span> <span class="btn-text-hide">Sample Data</span>
+      </button>
+      <button type="button" id="btn-clear-form" class="btn btn-danger-outline btn-sm" title="Clear all input fields">
+        <span>🗑️</span> <span class="btn-text-hide">Clear</span>
+      </button>
+      <button type="button" id="btn-generate-top" class="btn btn-primary btn-sm" title="Build & Refresh Resume">
+        <span>✨</span> <span>Generate Resume</span>
+      </button>
+      <button type="button" id="btn-download-pdf" class="btn btn-success btn-sm" title="Download PDF document directly">
+        <span>⬇</span> <span>Download PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Template Selection Sub-Bar -->
+  <div class="template-bar">
+    <div class="template-selection-group">
+      <span class="template-selection-label">Select Style:</span>
+      <div class="template-cards-wrapper">
+        <!-- Template 1: Plain (Zero Colors) -->
+        <div class="template-card active" data-template="plain" id="template-card-plain">
+          <span class="template-card-icon">📄</span>
+          <div class="template-card-info">
+            <span class="template-card-title">Classic Plain</span>
+            <span class="template-card-desc">No colors • Monochrome ATS standard</span>
+          </div>
+        </div>
+
+        <!-- Template 2: Attractive (Modern) -->
+        <div class="template-card" data-template="attractive" id="template-card-attractive">
+          <span class="template-card-icon">🎨</span>
+          <div class="template-card-info">
+            <span class="template-card-title">Modern Attractive</span>
+            <span class="template-card-desc">2-Column • Accent colors &amp; badges</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accent Color Picker (Active for Attractive Template) -->
+    <div class="color-picker-group" id="attractive-color-options" style="display: none;">
+      <span class="color-picker-label">Accent Theme:</span>
+      <div class="color-chips-list">
+        <span class="color-chip active" data-color="#2563eb" style="background-color: #2563eb;" title="Royal Blue"></span>
+        <span class="color-chip" data-color="#4f46e5" style="background-color: #4f46e5;" title="Modern Indigo"></span>
+        <span class="color-chip" data-color="#0d9488" style="background-color: #0d9488;" title="Teal Cyan"></span>
+        <span class="color-chip" data-color="#059669" style="background-color: #059669;" title="Emerald Green"></span>
+        <span class="color-chip" data-color="#334155" style="background-color: #334155;" title="Slate Executive"></span>
+        <span class="color-chip" data-color="#e11d48" style="background-color: #e11d48;" title="Crimson Ruby"></span>
+        <div class="custom-color-wrapper" title="Pick Custom Accent Color">
+          <input type="color" id="custom-color-input" value="#2563eb" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Tab Switcher (Screen < 1024px) -->
+  <div class="mobile-tabs">
+    <button type="button" class="mobile-tab-btn active" id="tab-edit">✏️ Edit Details</button>
+    <button type="button" class="mobile-tab-btn" id="tab-preview">👁️ View Resume</button>
+  </div>
+
+  <!-- Main Split Workspace -->
+  <main class="app-workspace">
+    
+    <!-- LEFT PANEL: DETAILS FORM EDITOR -->
+    <section class="panel-editor active-panel" id="panel-form">
+      <form id="resume-form" onsubmit="return false;">
+        
+        <!-- 1. Personal Information -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">👤</span>
+              <h2 class="section-title">Personal Information</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="input-fullName">Full Name *</label>
+                <input type="text" id="input-fullName" placeholder="e.g. Alex Morgan" required />
+              </div>
+              <div class="form-group">
+                <label for="input-jobTitle">Professional Title / Headline *</label>
+                <input type="text" id="input-jobTitle" placeholder="e.g. Senior Full-Stack Engineer" required />
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="input-email">Email Address</label>
+                <input type="email" id="input-email" placeholder="alex.morgan@example.com" />
+              </div>
+              <div class="form-group">
+                <label for="input-phone">Phone Number</label>
+                <input type="tel" id="input-phone" placeholder="+1 (555) 382-9471" />
+              </div>
+              <div class="form-group">
+                <label for="input-location">Location (City, Country)</label>
+                <input type="text" id="input-location" placeholder="San Francisco, CA" />
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="input-website">🌐 Portfolio / Website URL</label>
+                <input type="text" id="input-website" placeholder="e.g. alexmorgan.dev or https://..." />
+              </div>
+              <div class="form-group">
+                <label for="input-linkedin">💼 LinkedIn Profile</label>
+                <input type="text" id="input-linkedin" placeholder="e.g. linkedin.com/in/alexmorgan" />
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="input-github">🐙 GitHub Profile</label>
+                <input type="text" id="input-github" placeholder="e.g. github.com/alexmorgan" />
+              </div>
+              <div class="form-group">
+                <label for="input-twitter">🐦 X (Twitter) / Other Profile</label>
+                <input type="text" id="input-twitter" placeholder="e.g. x.com/alexmorgan or leetcode.com/..." />
+              </div>
+            </div>
+
+            <!-- Profile Photo (Attractive Template Option) -->
+            <div class="photo-upload-box">
+              <img id="photo-preview-thumb" src="" alt="Thumbnail" class="photo-preview-img" style="display: none;" />
+              <div class="photo-upload-actions">
+                <label class="file-input-btn">
+                  Choose Profile Photo
+                  <input type="file" id="input-photo" accept="image/*" />
+                </label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="input-showPhoto" /> Include Photo in Resume
+                  </label>
+                  <button type="button" id="btn-remove-photo" class="btn btn-danger-outline btn-sm" style="display: none; padding: 2px 6px;">Remove</button>
+                </div>
+                <span class="photo-hint">Best for the Attractive template (monochrome plain resumes avoid photos for ATS).</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Professional Summary -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">📝</span>
+              <h2 class="section-title">Professional Summary</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div class="form-group">
+              <label for="input-summary">Summary / Career Objective</label>
+              <textarea id="input-summary" rows="4" placeholder="Results-driven professional with 5+ years of experience in..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Work Experience -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">💼</span>
+              <h2 class="section-title">Work Experience</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="experience-list"></div>
+            <button type="button" id="btn-add-experience" class="btn-add-repeater">
+              <span>➕</span> Add Work Experience
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Education -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">🎓</span>
+              <h2 class="section-title">Education</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="education-list"></div>
+            <button type="button" id="btn-add-education" class="btn-add-repeater">
+              <span>➕</span> Add Education
+            </button>
+          </div>
+        </div>
+
+        <!-- 5. Skills & Expertise -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">⚡</span>
+              <h2 class="section-title">Skills &amp; Expertise</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="skills-list"></div>
+            <button type="button" id="btn-add-skill-category" class="btn-add-repeater">
+              <span>➕</span> Add Skill Category
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. Featured Projects -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">🚀</span>
+              <h2 class="section-title">Projects</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="projects-list"></div>
+            <button type="button" id="btn-add-project" class="btn-add-repeater">
+              <span>➕</span> Add Project
+            </button>
+          </div>
+        </div>
+
+        <!-- 7. Certifications & Awards -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">🏆</span>
+              <h2 class="section-title">Certifications &amp; Awards</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="certifications-list"></div>
+            <button type="button" id="btn-add-certification" class="btn-add-repeater">
+              <span>➕</span> Add Certification
+            </button>
+          </div>
+        </div>
+
+        <!-- 8. Languages -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="section-title-wrap">
+              <span class="section-icon">🌐</span>
+              <h2 class="section-title">Languages</h2>
+            </div>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="form-section-body">
+            <div id="languages-list"></div>
+            <button type="button" id="btn-add-language" class="btn-add-repeater">
+              <span>➕</span> Add Language
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom Generate & Export Trigger -->
+        <div class="editor-bottom-bar">
+          <button type="button" id="btn-generate" class="btn btn-primary btn-lg" style="flex: 2;">
+            <span>✨</span> Generate Resume
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- RIGHT PANEL: LIVE RESUME PREVIEW -->
+    <section class="panel-preview" id="panel-preview">
+      <!-- Preview Sub-Toolbar -->
+      <div class="preview-toolbar">
+        <div class="preview-badge-status">
+          <span class="pulse-indicator"></span>
+          <span id="preview-template-badge">Template: Classic Plain (No Colors)</span>
+        </div>
+
+        <div class="preview-controls">
+          <!-- Zoom Controls -->
+          <div class="zoom-controls">
+            <button type="button" id="btn-zoom-out" class="btn-zoom" title="Zoom Out">−</button>
+            <span class="zoom-level-text" id="zoom-level-text">100%</span>
+            <button type="button" id="btn-zoom-in" class="btn-zoom" title="Zoom In">+</button>
+            <button type="button" id="btn-zoom-reset" class="btn-zoom" title="Reset Zoom">Fit</button>
+          </div>
+
+          <button type="button" id="btn-print-pdf" class="btn btn-secondary btn-sm" title="Print or save as crisp vector PDF">
+            <span>🖨️</span> <span>Print to PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Paper Viewport Container -->
+      <div class="paper-viewport" id="paper-viewport">
+        <div id="resume-preview-container">
+          <!-- Resume sheet will be dynamically injected here by templates.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Supabase Cloud Sync Modal -->
+  <div id="supabase-modal" class="app-modal-overlay">
+    <div class="app-modal-card sb-modal-card">
+      <div class="sb-modal-header">
+        <div class="sb-modal-title-group">
+          <span class="sb-brand-logo">⚡</span>
+          <div>
+            <h3>Supabase Cloud Sync</h3>
+            <p class="sb-modal-subtitle">Save and sync resumes to your Supabase PostgreSQL database</p>
+          </div>
+        </div>
+        <button type="button" class="sb-btn-close" id="btn-close-sb-modal" title="Close">✕</button>
+      </div>
+
+      <!-- Modal Tabs -->
+      <div class="sb-modal-tabs">
+        <button type="button" class="sb-tab-btn active" data-tab="sb-tab-resumes" id="tab-btn-resumes">
+          📁 My Resumes
+        </button>
+        <button type="button" class="sb-tab-btn" data-tab="sb-tab-auth" id="tab-btn-auth">
+          👤 Account
+        </button>
+        <button type="button" class="sb-tab-btn" data-tab="sb-tab-config" id="tab-btn-config">
+          ⚙️ Connection
+        </button>
+      </div>
+
+      <!-- Tab 1: My Saved Resumes -->
+      <div class="sb-tab-content active" id="sb-tab-resumes">
+        <div id="sb-resumes-auth-notice" class="sb-notice-box" style="display: none;">
+          <p id="sb-auth-notice-text">Please <strong>sign in</strong> or <strong>connect Supabase</strong> to access cloud resumes.</p>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-goto-auth">Go to Sign In / Connect</button>
+        </div>
+
+        <div id="sb-resumes-container" style="display: none;">
+          <div class="sb-resumes-toolbar">
+            <button type="button" class="btn btn-success btn-sm" id="btn-save-as-new-modal">
+              <span>➕</span> <span>Save Current as New Resume</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-resumes" title="Refresh List">
+              <span>🔄</span>
+            </button>
+          </div>
+          <div class="sb-resumes-list" id="sb-resumes-list">
+            <div class="sb-empty-state">Loading resumes...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Account (Sign in / Sign up) -->
+      <div class="sb-tab-content" id="sb-tab-auth">
+        <!-- Logged Out View -->
+        <div id="sb-auth-logged-out">
+          <div class="form-group">
+            <label for="sb-auth-email">Email Address</label>
+            <input type="email" id="sb-auth-email" placeholder="name@example.com" />
+          </div>
+          <div class="form-group">
+            <label for="sb-auth-password">Password</label>
+            <input type="password" id="sb-auth-password" placeholder="••••••••" />
+          </div>
+          <div class="sb-auth-actions">
+            <button type="button" class="btn btn-primary" id="btn-sb-signin">Sign In</button>
+            <button type="button" class="btn btn-secondary" id="btn-sb-signup">Create Account</button>
+          </div>
+          <p class="sb-auth-hint">Secured by Supabase Authentication with encrypted passwords and Row Level Security.</p>
+        </div>
+
+        <!-- Logged In View -->
+        <div id="sb-auth-logged-in" style="display: none;">
+          <div class="sb-profile-card">
+            <div class="sb-profile-avatar">👤</div>
+            <div class="sb-profile-info">
+              <span class="sb-profile-label">Signed in as:</span>
+              <strong id="sb-user-email-display">user@example.com</strong>
+            </div>
+            <button type="button" class="btn btn-danger-outline btn-sm" id="btn-sb-signout">Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Connection & Configuration -->
+      <div class="sb-tab-content" id="sb-tab-config">
+        <div class="sb-config-form">
+          <div class="form-group">
+            <label for="sb-input-url">Supabase Project URL *</label>
+            <input type="text" id="sb-input-url" placeholder="https://xxxxxxxxxxxxxxxx.supabase.co" />
+            <span class="sb-field-hint">Found in Supabase Dashboard &rarr; Project Settings &rarr; API &rarr; Project URL</span>
+          </div>
+          <div class="form-group">
+            <label for="sb-input-key">Supabase Public Anon Key *</label>
+            <input type="text" id="sb-input-key" placeholder="eyJhbGciOi..." />
+            <span class="sb-field-hint">Found in Supabase Dashboard &rarr; Project Settings &rarr; API &rarr; Project API keys (anon public)</span>
+          </div>
+
+          <div class="sb-connection-status-bar" id="sb-status-banner">
+            <span class="sb-status-icon" id="sb-status-icon">⚪</span>
+            <span id="sb-status-text">Not Connected</span>
+          </div>
+
+          <div class="sb-config-actions">
+            <button type="button" class="btn btn-primary" id="btn-save-sb-config">Test &amp; Connect</button>
+            <button type="button" class="btn btn-danger-outline btn-sm" id="btn-clear-sb-config">Disconnect</button>
+          </div>
+
+          <div class="sb-sql-hint">
+            <strong>Database Schema:</strong> To prepare your Supabase database table, run the provided <code>supabase_schema.sql</code> script in your Supabase SQL Editor.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
