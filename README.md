@@ -2,6 +2,8 @@
 
 A modern, responsive, zero-dependency web application for building, customizing, and downloading professional resumes in PDF format.
 
+👉 **Live Demo:** [https://onlinesmit.github.io/smit_AI_resume/](https://onlinesmit.github.io/smit_AI_resume/)
+
 ---
 
 ## 🚀 How to Run
